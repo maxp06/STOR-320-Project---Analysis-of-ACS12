@@ -1,0 +1,77 @@
+---
+title: "EDA"
+output: html_document
+---
+
+```{r}
+install.packages("openintro")
+library(openintro)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+```{r}
+birdsClean <- birds %>% 
+  .[-c(2, 3, 4, 15, 16)] %>% 
+  separate(date, into = c("M","D","Y"), convert = T) %>%
+  drop_na()
+```
+
+
+```{r}
+#Many accidents occur when birds are sucked into the engine of the aircraft. Is there a significant relationship between the number of engines on the aircraft and the amount of birds hit?
+counts = birdsClean %>%
+  group_by(birds_struck, num_engs) %>%
+count(num_engs, birds_struck)
+sum(counts$n)
+counts$n = counts$n / 9015
+counts
+
+ggplot(data = counts) +
+  geom_tile(aes(num_engs, birds_struck, fill = n))
+```
+
+
+
+
+
+```{r}
+acsClean = acs12 %>% 
+  .[-c(8)] %>%
+  filter(employment == "employed") %>%
+  drop_na() %>%
+  mutate(birth_qtr = as.factor(ifelse(birth_qrtr == "jul thru sep", 3,
+                               ifelse(birth_qrtr == "oct thru dec", 4,
+                               ifelse(birth_qrtr == "jan thru mar", 1, 
+                               ifelse(birth_qrtr == "apr thru jun", 2, 0))))))
+acsClean
+```
+What is the relationship between disability and the interaction between education and income?
+```{r}
+ggplot(acsClean) +
+  geom_point(aes(x=edu, y=income, col = disability))
+```
+We can see on the graph that people who are not disabled make more on average for all 3 levels of education and income seems to be slightly higher as you go up in education level. There seems to be more disabled people in hs or lower and this could be a reason for why those people don't have a higher degree in the first place.
+
+
+What is the relationship between hours worked and other significant variables?
+```{r}
+plot1<-ggplot(acsClean,aes(x=hrs_work, y=income, group=1)) +
+  geom_point()
+plot2<-ggplot(acsClean, aes(x=hrs_work, y=age, group=1)) +
+  geom_point()
+plot3<-ggplot(acsClean, aes(x=hrs_work, y=gender, group=1)) +
+  geom_point()
+plot4<-ggplot(acsClean, aes(x=hrs_work, y=race, group=1)) +
+  geom_point()
+plot5<-ggplot(acsClean, aes(x=hrs_work, y=citizen, group=1)) +
+  geom_point()
+plot6<-ggplot(acsClean, aes(x=hrs_work, y=married, group=1)) +
+  geom_point()
+
+grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, ncol=3)
+```
+The income tends to increase as hrs_worked increases due to when people are paid hourly. It starts to become irrelevant after a certain bit though because people are getting paid by salary so everyone works the same hours but makes different amounts due to their skill level. People tend to work more during their middle ages and less in their early and late ages, probably due to factors like school and retirement. Men work on average more hours; this might be due to more men being in the workforce. Looking at the race vs hrs_work graph, the dots are much denser for white people because more white people have jobs and therefore, are more likely to work longer hours too. Citizens work more hours on average because they are more likely to get jobs that will allow them to do so. Married people tend to work longer hours maybe because they have to support more people.
+
